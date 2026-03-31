@@ -12,4 +12,4 @@ CREATE TABLE IF NOT EXISTS students (
 );
 
 INSERT INTO students (name, email, phone, class) VALUES
-('HUỲNH TRẦN SƠN SANH', 'sanh2251220109@donga.edu.vn', '0123456789', 'K49');
+('HUỲNH TRẦN SƠN SANH', 'sanh2251220109@dau.edu.vn', '0123456789', '22CT3');

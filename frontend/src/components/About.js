@@ -13,25 +13,41 @@ function About() {
       .catch(() => setError('Không thể tải thông tin'));
   }, []);
 
+  const fields = info ? [
+    { label: 'Họ và tên',    value: info.ten,            highlight: true },
+    { label: 'MSSV',         value: info.maSoSinhVien                     },
+    { label: 'Lớp',          value: info.lop                              },
+    { label: 'Trường',       value: info.truong                           },
+    { label: 'Chuyên ngành', value: info.chuyenNganh                     },
+  ] : [];
+
   return (
-    <div className="card shadow-sm h-100">
-      <div className="card-header bg-primary text-white">
-        <h5 className="mb-0">Thông Tin Sinh Viên</h5>
+    <div className="g-card">
+      <div className="card-header-bar">
+        <div className="icon" style={{ background: 'rgba(124,58,237,0.15)', color: '#a78bfa' }}>
+          👤
+        </div>
+        <h5>Thông Tin Sinh Viên</h5>
       </div>
-      <div className="card-body">
-        {error && <div className="alert alert-danger">{error}</div>}
-        {info ? (
-          <table className="table table-borderless mb-0">
-            <tbody>
-              <tr><th>Họ tên:</th><td>{info.ten}</td></tr>
-              <tr><th>MSSV:</th><td>{info.maSoSinhVien}</td></tr>
-              <tr><th>Lớp:</th><td>{info.lop}</td></tr>
-              <tr><th>Trường:</th><td>{info.truong}</td></tr>
-              <tr><th>Chuyên ngành:</th><td>{info.chuyenNganh}</td></tr>
-            </tbody>
-          </table>
-        ) : !error && (
-          <div className="text-center"><div className="spinner-border text-primary" /></div>
+      <div className="card-body-pad">
+        {error && <div className="alert-err">{error}</div>}
+
+        {!info && !error && (
+          <div className="spinner-wrap"><div className="spinner" /></div>
+        )}
+
+        {info && (
+          <>
+            <div className="about-avatar">🎓</div>
+            {fields.map(({ label, value, highlight }) => (
+              <div className="info-row" key={label}>
+                <span className="info-label">{label}</span>
+                <span className={`info-value${highlight ? ' highlight' : ''}`}>
+                  {value || '—'}
+                </span>
+              </div>
+            ))}
+          </>
         )}
       </div>
     </div>

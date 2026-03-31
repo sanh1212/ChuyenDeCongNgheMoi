@@ -4,10 +4,12 @@ import axios from 'axios';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 function StudentList() {
-  const [students, setStudents] = useState([]);
-  const [form, setForm] = useState({ name: '', email: '', phone: '', class: '' });
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [students, setStudents]   = useState([]);
+  const [form, setForm]           = useState({ name: '', email: '', phone: '', class: '' });
+  const [editingId, setEditingId] = useState(null);
+  const [error, setError]         = useState(null);
+  const [loading, setLoading]     = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchStudents = () => {
     setLoading(true);
@@ -19,64 +21,193 @@ function StudentList() {
 
   useEffect(() => { fetchStudents(); }, []);
 
-  const handleSubmit = (e) => {
+  const handleChange = key => e => setForm(f => ({ ...f, [key]: e.target.value }));
+
+  const handleSubmit = e => {
     e.preventDefault();
     setError(null);
-    axios.post(`${API_URL}/api/students`, form)
-      .then(() => {
-        setForm({ name: '', email: '', phone: '', class: '' });
-        fetchStudents();
-      })
-      .catch(err => setError(err.response?.data?.error || 'Lỗi khi thêm sinh viên'));
+    setSubmitting(true);
+
+    if (editingId) {
+      // Update existing student
+      axios.put(`${API_URL}/api/students/${editingId}`, form)
+        .then(() => {
+          setForm({ name: '', email: '', phone: '', class: '' });
+          setEditingId(null);
+          fetchStudents();
+        })
+        .catch(err => setError(err.response?.data?.error || 'Lỗi khi cập nhật sinh viên'))
+        .finally(() => setSubmitting(false));
+    } else {
+      // Create new student
+      axios.post(`${API_URL}/api/students`, form)
+        .then(() => {
+          setForm({ name: '', email: '', phone: '', class: '' });
+          fetchStudents();
+        })
+        .catch(err => setError(err.response?.data?.error || 'Lỗi khi thêm sinh viên'))
+        .finally(() => setSubmitting(false));
+    }
+  };
+
+  const handleEdit = (student) => {
+    setEditingId(student.id);
+    setForm({
+      name: student.name,
+      email: student.email,
+      phone: student.phone || '',
+      class: student.class || ''
+    });
+    // Scroll to top or just clear any errors
+    setError(null);
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa sinh viên này không?')) {
+      setError(null);
+      axios.delete(`${API_URL}/api/students/${id}`)
+        .then(() => {
+          fetchStudents();
+          // If the user deletes the student they are currently editing, reset the form
+          if (editingId === id) {
+            setForm({ name: '', email: '', phone: '', class: '' });
+            setEditingId(null);
+          }
+        })
+        .catch(err => setError(err.response?.data?.error || 'Lỗi khi xóa sinh viên'));
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setForm({ name: '', email: '', phone: '', class: '' });
+    setError(null);
   };
 
   return (
-    <div className="card shadow-sm">
-      <div className="card-header bg-success text-white">
-        <h5 className="mb-0">Danh Sách Sinh Viên</h5>
+    <div className="g-card" style={{ display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <div className="card-header-bar">
+        <div className="icon" style={{ background: 'rgba(6,182,212,0.15)', color: '#06b6d4' }}>
+          📋
+        </div>
+        <h5>Danh Sách Sinh Viên</h5>
+        <span style={{
+          marginLeft: 'auto',
+          background: 'rgba(6,182,212,0.12)',
+          color: '#06b6d4',
+          border: '1px solid rgba(6,182,212,0.25)',
+          borderRadius: '999px',
+          fontSize: '0.72rem',
+          fontWeight: 600,
+          padding: '0.22em 0.75em',
+        }}>
+          {students.length} sinh viên
+        </span>
       </div>
-      <div className="card-body">
-        {error && <div className="alert alert-danger">{error}</div>}
 
-        <form onSubmit={handleSubmit} className="mb-3">
-          <div className="row g-2">
-            <div className="col-md-6">
-              <input className="form-control" placeholder="Họ tên *" value={form.name}
-                onChange={e => setForm({ ...form, name: e.target.value })} required />
-            </div>
-            <div className="col-md-6">
-              <input className="form-control" placeholder="Email *" type="email" value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })} required />
-            </div>
-            <div className="col-md-6">
-              <input className="form-control" placeholder="Số điện thoại" value={form.phone}
-                onChange={e => setForm({ ...form, phone: e.target.value })} />
-            </div>
-            <div className="col-md-4">
-              <input className="form-control" placeholder="Lớp" value={form.class}
-                onChange={e => setForm({ ...form, class: e.target.value })} />
-            </div>
-            <div className="col-md-2">
-              <button type="submit" className="btn btn-success w-100">Thêm</button>
-            </div>
+      <div className="card-body-pad">
+        {/* Error */}
+        {error && <div className="alert-err">⚠️ {error}</div>}
+
+        {/* Add/Edit Form */}
+        <form onSubmit={handleSubmit} style={{ marginBottom: '1.25rem' }}>
+          <div className="form-grid">
+            <input
+              className="st-input"
+              placeholder="Họ tên *"
+              value={form.name}
+              onChange={handleChange('name')}
+              required
+            />
+            <input
+              className="st-input"
+              placeholder="Email *"
+              type="email"
+              value={form.email}
+              onChange={handleChange('email')}
+              required
+            />
+            <input
+              className="st-input"
+              placeholder="Số điện thoại"
+              value={form.phone}
+              onChange={handleChange('phone')}
+            />
+            <input
+              className="st-input"
+              placeholder="Lớp"
+              value={form.class}
+              onChange={handleChange('class')}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button type="submit" className="btn-add" disabled={submitting} style={{ flex: 1 }}>
+              {submitting ? '⏳ Đang lưu...' : (editingId ? '💾 Cập nhật sinh viên' : '➕ Thêm sinh viên')}
+            </button>
+            {editingId && (
+              <button 
+                type="button" 
+                className="btn-add" 
+                onClick={cancelEdit} 
+                disabled={submitting}
+                style={{ flex: 0.3, background: 'rgba(255,255,255,0.1)', color: '#fff' }}
+              >
+                Hủy
+              </button>
+            )}
           </div>
         </form>
 
+        {/* Divider */}
+        <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', marginBottom: '1rem' }} />
+
+        {/* Table */}
         {loading ? (
-          <div className="text-center"><div className="spinner-border text-success" /></div>
+          <div className="spinner-wrap"><div className="spinner" /></div>
         ) : (
-          <div className="table-responsive">
-            <table className="table table-striped table-sm mb-0">
+          <div className="st-table-wrap">
+            <table className="st-table">
               <thead>
-                <tr><th>#</th><th>Họ tên</th><th>Email</th><th>SĐT</th><th>Lớp</th></tr>
+                <tr>
+                  <th>#</th>
+                  <th>Họ tên</th>
+                  <th>Email</th>
+                  <th>SĐT</th>
+                  <th>Lớp</th>
+                  <th style={{ textAlign: 'center' }}>Thao tác</th>
+                </tr>
               </thead>
               <tbody>
                 {students.length === 0 ? (
-                  <tr><td colSpan="5" className="text-center text-muted">Chưa có sinh viên</td></tr>
+                  <tr>
+                    <td colSpan="6" className="td-empty">
+                      📭 Chưa có sinh viên nào trong danh sách
+                    </td>
+                  </tr>
                 ) : students.map((s, i) => (
                   <tr key={s.id}>
-                    <td>{i + 1}</td><td>{s.name}</td><td>{s.email}</td>
-                    <td>{s.phone || '-'}</td><td>{s.class || '-'}</td>
+                    <td className="td-index">{i + 1}</td>
+                    <td className="td-name">{s.name}</td>
+                    <td>{s.email}</td>
+                    <td>{s.phone || '—'}</td>
+                    <td>{s.class || '—'}</td>
+                    <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      <button 
+                        onClick={() => handleEdit(s)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', marginRight: '0.5rem', opacity: 0.8 }}
+                        title="Sửa"
+                      >
+                        ✏️
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(s.id)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', opacity: 0.8 }}
+                        title="Xóa"
+                      >
+                        🗑️
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

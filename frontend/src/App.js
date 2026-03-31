@@ -6,19 +6,29 @@ import './App.css';
 
 function App() {
   return (
-    <div className="container py-4">
-      <h1 className="text-center mb-4">DevOps Mini Project</h1>
-      <div className="row g-4">
-        <div className="col-12">
-          <HealthCheck />
-        </div>
-        <div className="col-md-5">
-          <About />
-        </div>
-        <div className="col-md-7">
-          <StudentList />
-        </div>
+    <div className="app-wrapper">
+      {/* ── Header ── */}
+      <header className="app-header">
+        <div className="badge-devops">🚀 DevOps Mini Project</div>
+        <h1>Hệ Thống Quản Lý Sinh Viên</h1>
+        <p>Quản lý danh sách sinh viên với kiến trúc fullstack hiện đại</p>
+      </header>
+
+      {/* ── Health Status ── */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <HealthCheck />
       </div>
+
+      {/* ── Main Grid ── */}
+      <div className="main-grid">
+        <About />
+        <StudentList />
+      </div>
+
+      {/* ── Footer ── */}
+      <footer className="footer-tag">
+        <span>⚡ Built with React · Node.js · MySQL · Docker</span>
+      </footer>
     </div>
   );
 }
