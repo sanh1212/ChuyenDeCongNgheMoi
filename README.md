@@ -8,8 +8,8 @@ Dự án DevOps mini với Backend (Node.js) + Frontend (React) + Database (MySQ
 |---|---|
 | Họ tên | HUỲNH TRẦN SƠN SANH |
 | MSSV | 2251220109 |
-| Lớp | K49 |
-| Trường | Đại Học Đông Á |
+| Lớp | 22CT3 |
+| Trường | Đại Học Kiến Trúc  |
 | Chuyên ngành | Công Nghệ Thông Tin |
 
 ## Cấu Trúc Dự Án
